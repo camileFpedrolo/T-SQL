@@ -1,0 +1,11 @@
+--- TAMANHO DO BANCO PELO BACKUP
+SELECT
+[database_name] AS "Database",
+DATEPART(month,[backup_start_date]) AS "Month",
+AVG([backup_size]/1024/1024) AS "Backup Size MB",
+AVG([compressed_backup_size]/1024/1024) AS "Compressed Backup Size MB",
+AVG([backup_size]/[compressed_backup_size]) AS "Compression Ratio"
+FROM msdb.dbo.backupset
+WHERE 
+[type] = 'D'
+GROUP BY [database_name],DATEPART(mm,[backup_start_date]);
