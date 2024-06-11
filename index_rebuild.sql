@@ -107,3 +107,84 @@ end
  
 --    set @Contador = @Contador + 1
 --end
+
+/*
+Quando for um cliente não realizada update de estatísticas frequentemente, retirar a cláusula WHERE
+*/
+ 
+WITH STATS  (ID, Tabela, StatsName, ultAtl, modific, dias, comando)
+ 
+as
+ 
+(
+ 
+SELECT DISTINCT
+ 
+       TB.object_id
+ 
+       ,TB.name
+ 
+       ,ST.name
+ 
+       ,stats.last_updated
+ 
+       ,stats.modification_counter
+ 
+       ,(DATEDIFF(d,stats.last_updated ,getdate()) ) AS 'DiasDesatualizados'
+ 
+       ,'UPDATE STATISTICS [' + sc.name + '].['+TB.name+'] ['+ST.name+'] WITH FULLSCAN' as 'command'
+ 
+  FROM sys.tables TB
+ 
+  inner join sys.schemas sc on
+ 
+  sc.schema_id = TB.schema_id
+ 
+ INNER JOIN sys.stats ST ON TB.object_id = ST.object_id
+ 
+ INNER JOIN sys.indexes IX ON TB.object_id = IX.object_id
+ 
+ CROSS APPLY sys.dm_db_stats_properties(TB.object_id, ST.stats_id) as stats
+ 
+ where (DATEDIFF(d,stats.last_updated ,getdate()) ) > 0
+ 
+    and stats.modification_counter > 0
+ 
+ORDER BY TB.name, ST.name
+ 
+)
+ 
+select * from STATS order by comando--- TAMANHO DO BANCO PELO BACKUP
+SELECT
+[database_name] AS "Database",
+DATEPART(month,[backup_start_date]) AS "Month",
+AVG([backup_size]/1024/1024) AS "Backup Size MB",
+AVG([compressed_backup_size]/1024/1024) AS "Compressed Backup Size MB",
+AVG([backup_size]/[compressed_backup_size]) AS "Compression Ratio"
+FROM msdb.dbo.backupset
+WHERE 
+[type] = 'D'
+GROUP BY [database_name],DATEPART(mm,[backup_start_date]);
+
+-- histórico de atualizações de estatísticas 
+
+WITH STATS  (ID, Tabela, StatsName, ultAtl, modific, dias, comando)
+as
+(
+SELECT DISTINCT
+      TB.object_id
+      ,TB.name
+      ,ST.name
+      ,stats.last_updated
+      ,stats.modification_counter
+      ,(DATEDIFF(d,stats.last_updated ,getdate()) ) AS 'DiasDesatualizados'
+      ,'UPDATE STATISTICS [' + sc.name + '].['+TB.name+'] ['+ST.name+'] WITH FULLSCAN' as 'command'
+ FROM sys.tables TB
+ inner join sys.schemas sc on
+ sc.schema_id = TB.schema_id
+INNER JOIN sys.stats ST ON TB.object_id = ST.object_id
+INNER JOIN sys.indexes IX ON TB.object_id = IX.object_id
+CROSS APPLY sys.dm_db_stats_properties(TB.object_id, ST.stats_id) as stats
+--ORDER BY TB.name, ST.name
+)
+select * from STATS order by modific desc
