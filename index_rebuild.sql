@@ -188,3 +188,22 @@ CROSS APPLY sys.dm_db_stats_properties(TB.object_id, ST.stats_id) as stats
 --ORDER BY TB.name, ST.name
 )
 select * from STATS order by modific desc
+
+------------------------------------------------------------------------
+
+with x
+as (
+select
+getdate() data, @@SERVERNAME server, db_name(db_id()) banco, s.name sX,
+OBJECT_NAME(b.object_id) tabela, b.name Indice,
+avg_fragmentation_in_percent MedPer , page_count PgNr, fill_factor ff
+from sys.dm_db_index_physical_stats(  db_id(), null, null, null,null) A
+inner join sys.indexes B
+on a.object_id = b.object_id and A.index_id = B.index_id
+inner join sys.tables t
+on t.object_id = b.object_id
+inner join sys.schemas S
+on t.schema_id = s.schema_id)
+select * from x
+where MedPer > 30 and PgNr > 1000
+ORDER BY x.MedPer desc
