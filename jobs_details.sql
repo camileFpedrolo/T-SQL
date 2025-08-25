@@ -143,6 +143,30 @@ ORDER BY
 
 -------------------------------------------------------------------------------------------------------------
 
+-- Localiza job por id
+        
+SELECT
+     job.job_id,
+     notify_level_email,
+     name,
+     enabled,
+     description,
+     step_name,
+     command,
+     server,
+     database_name
+FROM
+    msdb.dbo.sysjobs job
+INNER JOIN
+    msdb.dbo.sysjobsteps steps        
+ON
+    job.job_id = steps.job_id
+WHERE
+    job.enabled = 1
+    and job.job_id = --id do job (pode ser obtido pela query que retorna os processos e os detalhes deles)
+
+        
+-------------------------------------------------------------------------------------------------------------
 -- Lista os jobs com os operadores de alertas habilitados   
 
 use [msdb]
