@@ -24,3 +24,4 @@ WHERE(trace_event_id >= 92
       AND trace_event_id <= 95)
 	  AND DatabaseName = 'tempdb'
 ORDER BY t.StartTime;
+
