@@ -107,3 +107,69 @@ USE [AdventureWorks2019]
 GO
 ALTER DATABASE [AdventureWorks2019]
 SET ENCRYPTION OFF
+
+
+--------------------------------------------------------------------------------------------------------------------
+
+-- Backup sem criptografia de um banco com TDE
+
+-- RETRIEVES DATABASES ENCRYPTION STATE 
+SELECT DB_NAME([database_id]) AS 'Database Name',
+   [encryption_state],
+   encryption_state = CASE 
+    WHEN encryption_state = 1
+      THEN 'Descriptografado'
+    WHEN encryption_state = 2
+      THEN 'Criptografia em Progresso'
+    WHEN encryption_state = 3
+      THEN 'Criptografado'
+    WHEN encryption_state = 4
+      THEN 'Troca da chave em Progresso'
+    WHEN encryption_state = 5
+      THEN 'Descriptografia em Progresso'
+    WHEN encryption_state = 6
+      THEN 'Troca de Protecao em Progresso'
+    WHEN encryption_state = 0
+      THEN 'Database nao esta em processo de criptografia'
+    END,
+   [percent_complete],
+   [encryption_state_desc],
+   [encryption_scan_state],
+   [encryption_scan_state_desc],
+   [encryption_scan_modify_date],
+   [create_date],
+   [regenerate_date],
+   [key_algorithm],
+   [key_length],
+   [modify_date],
+   [set_date],
+   [opened_date],
+   [encryptor_thumbprint],
+   [encryptor_type]
+FROM [sys].[dm_database_encryption_keys]
+ 
+-- DISABLE DATABASE ENCRYPTION
+USE [AdventureWorks2019]
+GO
+ALTER DATABASE [AdventureWorks2019]
+SET ENCRYPTION OFF
+ 
+-- DROP DATABASE ENCRYPTION KEY
+USE [AdventureWorks2019];
+GO
+DROP DATABASE ENCRYPTION KEY;
+GO
+ 
+-- CREATE DATABASE ENCRYPTION KEY (DEK) IN THE DATABASE WHERE TDE WILL BE ENABLED
+USE [AdventureWorks2019]
+GO
+CREATE DATABASE ENCRYPTION KEY
+WITH ALGORITHM = AES_256
+ENCRYPTION BY SERVER CERTIFICATE CertificadoTeste;
+GO
+ 
+-- ENABLE DATABASE ENCRYPTION
+USE [AdventureWorks2019]
+GO
+ALTER DATABASE [AdventureWorks2019]
+SET ENCRYPTION ON
